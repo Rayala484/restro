@@ -23,7 +23,7 @@ type AuthCtx = {
   user: CustomerUser | null;
   isLoggedIn: boolean;
   login: (phone: string, name?: string) => boolean;
-  signUp: (data: { name: string; phone: string; email?: string; address: CustomerAddress }) => void;
+  signUp: (data: { name: string; phone: string; email?: string; address?: CustomerAddress }) => void;
   saveAddress: (address: CustomerAddress) => void;
   activateMembership: () => void;
   logout: () => void;
