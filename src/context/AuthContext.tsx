@@ -15,6 +15,7 @@ export type CustomerUser = {
   phone: string;
   email?: string;
   address?: CustomerAddress;
+  isMember?: boolean;
 };
 
 type AuthCtx = {
@@ -23,6 +24,7 @@ type AuthCtx = {
   login: (phone: string, name?: string) => boolean;
   signUp: (data: { name: string; phone: string; email?: string; address: CustomerAddress }) => void;
   saveAddress: (address: CustomerAddress) => void;
+  activateMembership: () => void;
   logout: () => void;
 };
 
@@ -103,12 +105,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const activateMembership = () => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, isMember: true };
+      try {
+        const db: Record<string, CustomerUser> = JSON.parse(localStorage.getItem(USERS_DB_KEY) || '{}');
+        if (prev.phone && db[prev.phone]) {
+          db[prev.phone] = updated;
+          localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
+        }
+      } catch {}
+      return updated;
+    });
+  };
+
   const logout = () => {
     setUser(null);
   };
 
   return (
-    <Ctx.Provider value={{ user, isLoggedIn: Boolean(user), login, signUp, saveAddress, logout }}>
+    <Ctx.Provider value={{ user, isLoggedIn: Boolean(user), login, signUp, saveAddress, activateMembership, logout }}>
       {children}
     </Ctx.Provider>
   );

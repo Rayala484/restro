@@ -16,10 +16,9 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { rupee } from '../data/menu';
 
-const NAV = [
+const BASE_NAV = [
   { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/menu', label: 'The Menu', icon: UtensilsCrossed },
-  { to: '/membership', label: 'Membership', icon: Crown },
   { to: '/about', label: 'Our Story', icon: Info },
   { to: '/contact', label: 'Contact', icon: Phone },
 ];
@@ -37,15 +36,24 @@ function Wordmark() {
 function SideRail() {
   const { user, isLoggedIn } = useAuth();
 
+  // Only suggest/display Membership to customers who have already created an account
+  const navItems = isLoggedIn
+    ? [
+        ...BASE_NAV.slice(0, 2),
+        { to: '/membership', label: 'Plus Rewards', icon: Crown },
+        ...BASE_NAV.slice(2),
+      ]
+    : BASE_NAV;
+
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-sand/80 bg-cream/70 px-6 py-8 backdrop-blur-xl lg:flex">
       <Wordmark />
       <nav className="mt-10 flex flex-1 flex-col gap-1">
-        {NAV.map((n) => (
+        {navItems.map((n) => (
           <NavLink
             key={n.to}
             to={n.to}
-            end={n.end}
+            end={(n as any).end}
             className={({ isActive }) =>
               `group flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-medium transition ${
                 isActive ? 'bg-ink text-cream' : 'text-ink/60 hover:bg-white hover:text-ink'
@@ -93,6 +101,14 @@ function MobileBar() {
   const [open, setOpen] = useState(false);
   const { user, isLoggedIn } = useAuth();
 
+  const navItems = isLoggedIn
+    ? [
+        ...BASE_NAV.slice(0, 2),
+        { to: '/membership', label: 'Plus Rewards', icon: Crown },
+        ...BASE_NAV.slice(2),
+      ]
+    : BASE_NAV;
+
   return (
     <div className="lg:hidden">
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-sand/80 bg-cream/85 px-4 backdrop-blur-xl">
@@ -119,11 +135,11 @@ function MobileBar() {
       {open && (
         <div className="fixed inset-0 top-16 z-40 bg-cream/98 px-4 py-6 backdrop-blur">
           <nav className="flex flex-col gap-1">
-            {NAV.map((n) => (
+            {navItems.map((n) => (
               <NavLink
                 key={n.to}
                 to={n.to}
-                end={n.end}
+                end={(n as any).end}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-2xl px-4 py-4 font-display text-xl ${

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Check, Crown, Mail, Phone, MapPin } from 'lucide-react';
+import { Check, Crown, Mail, Phone, MapPin, Lock, UserCheck, Sparkles } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 function Shell({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -44,17 +45,77 @@ export function Contact() {
 }
 
 export function Membership() {
-  const perks = ['Free delivery on every order', 'Extra 10% off, always', 'Priority kitchen & support', 'Members-only weekend deals'];
+  const { user, isLoggedIn, activateMembership } = useAuth();
+  const perks = [
+    '100% Free delivery on all orders',
+    'Extra 10% instant off on whole menu',
+    'Priority kitchen dispatch & customer care',
+    'Exclusive members-only seasonal dishes',
+  ];
+
   return (
-    <Shell title="Restro Plus" sub="More food, more savings — for regulars.">
-      <div className="overflow-hidden rounded-4xl bg-gradient-to-br from-ink to-coal p-8 text-cream shadow-lift">
-        <div className="flex items-center gap-2 text-saffron"><Crown className="h-6 w-6" /><span className="font-display text-xl font-bold">Plus Membership</span></div>
-        <p className="mt-2 font-display text-4xl font-extrabold">₹99<span className="text-lg font-medium text-cream/60">/month</span></p>
-        <ul className="mt-5 space-y-2">
-          {perks.map((p) => <li key={p} className="flex items-center gap-2 text-cream/85"><Check className="h-5 w-5 text-veg" /> {p}</li>)}
-        </ul>
-        <button className="btn-primary mt-6 bg-saffron text-ink hover:bg-saffron/90">Join Plus</button>
-      </div>
+    <Shell title="Restro Plus Loyalty" sub="Exclusive rewards program for our registered diners.">
+      {!isLoggedIn ? (
+        <div className="card p-8 text-center space-y-4 max-w-xl mx-auto border-2 border-dashed border-sand">
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-amber-500/10 text-amber-600">
+            <Lock className="h-8 w-8" />
+          </div>
+          <h2 className="font-display text-2xl font-bold">Registered Account Required</h2>
+          <p className="text-sm text-ink/65 leading-relaxed">
+            Restro Plus is a VIP loyalty benefit reserved for registered customers. 
+            Please sign in or create an account before activating membership.
+          </p>
+          <div className="pt-2">
+            <Link to="/login?redirect=/membership" className="btn-primary">
+              Sign In / Register to Unlock Plus →
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-4xl bg-gradient-to-br from-ink to-coal p-8 text-cream shadow-lift max-w-xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-saffron">
+              <Crown className="h-6 w-6" />
+              <span className="font-display text-xl font-bold">Plus Membership</span>
+            </div>
+            {user?.isMember && (
+              <span className="rounded-full bg-veg/20 text-veg border border-veg/40 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+                Active Member
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3 flex items-center gap-2 text-xs text-cream/70 bg-white/10 p-2.5 rounded-xl">
+            <UserCheck className="h-4 w-4 text-saffron shrink-0" />
+            <span>Account: <strong>{user?.name}</strong> (+91 {user?.phone})</span>
+          </div>
+
+          <p className="mt-4 font-display text-4xl font-extrabold text-white">
+            ₹99<span className="text-lg font-medium text-cream/60">/month</span>
+          </p>
+
+          <ul className="mt-5 space-y-2.5">
+            {perks.map((p) => (
+              <li key={p} className="flex items-center gap-2.5 text-sm text-cream/85">
+                <Check className="h-4 w-4 text-veg shrink-0" /> {p}
+              </li>
+            ))}
+          </ul>
+
+          {user?.isMember ? (
+            <div className="mt-6 flex items-center gap-2 text-sm text-veg font-bold bg-veg/10 p-3 rounded-2xl border border-veg/30">
+              <Sparkles className="h-5 w-5" /> Membership active on your account!
+            </div>
+          ) : (
+            <button
+              onClick={activateMembership}
+              className="btn-primary mt-6 w-full bg-saffron text-ink hover:bg-saffron/90 font-bold"
+            >
+              Activate Plus for ₹99/month
+            </button>
+          )}
+        </div>
+      )}
     </Shell>
   );
 }
