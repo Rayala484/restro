@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { color-scheme: light; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+    background-image: radial-gradient(1200px 600px at 100% -10%, rgba(245,158,11,0.10), transparent 60%),
+                      radial-gradient(900px 500px at -10% 10%, rgba(234,88,12,0.08), transparent 55%);
+    background-attachment: fixed;
+  }
+  h1,h2,h3,h4 { @apply font-display tracking-tight; }
+  ::selection { @apply bg-ember/20; }
+}
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none; }
+  .btn-primary { @apply btn bg-ember text-white px-5 py-3 shadow-lift hover:bg-emberdark; }
+  .btn-ghost { @apply btn bg-white/70 text-ink px-5 py-3 border border-sand hover:bg-white; }
+  .btn-sm { @apply px-4 py-2 text-sm; }
+  .card { @apply bg-white rounded-3xl shadow-card border border-sand/70; }
+  .chip { @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold; }
+  .input { @apply w-full rounded-2xl border border-sand bg-white px-4 py-3 text-ink outline-none transition focus:border-ember focus:ring-4 focus:ring-ember/15; }
+  .container-x { @apply mx-auto w-full max-w-6xl px-4 sm:px-6; }
+  .veg-dot { @apply inline-flex h-4 w-4 items-center justify-center rounded-[4px] border-2; }
+}
+
+/* hide scrollbar for horizontal category rails */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
