@@ -1,7 +1,19 @@
 import { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Home, UtensilsCrossed, Info, Phone, ShoppingBag, Crown, Menu as MenuIcon, X } from 'lucide-react';
+import {
+  Home,
+  UtensilsCrossed,
+  Info,
+  Phone,
+  ShoppingBag,
+  Crown,
+  Menu as MenuIcon,
+  X,
+  User,
+  Lock,
+} from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { rupee } from '../data/menu';
 
 const NAV = [
@@ -23,17 +35,50 @@ function Wordmark() {
 
 /** Fixed vertical navigation rail (desktop). */
 function SideRail() {
+  const { user, isLoggedIn } = useAuth();
+
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-sand/80 bg-cream/70 px-6 py-8 backdrop-blur-xl lg:flex">
       <Wordmark />
-      <nav className="mt-12 flex flex-1 flex-col gap-1">
+      <nav className="mt-10 flex flex-1 flex-col gap-1">
         {NAV.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.end}
-            className={({ isActive }) => `group flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-medium transition ${isActive ? 'bg-ink text-cream' : 'text-ink/60 hover:bg-white hover:text-ink'}`}>
+          <NavLink
+            key={n.to}
+            to={n.to}
+            end={n.end}
+            className={({ isActive }) =>
+              `group flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-medium transition ${
+                isActive ? 'bg-ink text-cream' : 'text-ink/60 hover:bg-white hover:text-ink'
+              }`
+            }
+          >
             <n.icon className="h-5 w-5" /> {n.label}
           </NavLink>
         ))}
+
+        {/* Customer Account Nav Link */}
+        <NavLink
+          to={isLoggedIn ? '/account' : '/login'}
+          className={({ isActive }) =>
+            `group mt-2 flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-medium transition ${
+              isActive ? 'bg-ink text-cream' : 'text-ink/70 hover:bg-white hover:text-ink'
+            }`
+          }
+        >
+          {isLoggedIn ? (
+            <>
+              <User className="h-5 w-5 text-ember" />
+              <span className="truncate">{user?.name ? `Hi, ${user.name.split(' ')[0]}` : 'My Account'}</span>
+            </>
+          ) : (
+            <>
+              <Lock className="h-5 w-5 text-amber-600" />
+              <span>Sign In / Register</span>
+            </>
+          )}
+        </NavLink>
       </nav>
+
       <div className="mt-6 rounded-3xl bg-ink p-5 text-cream">
         <p className="font-display text-lg leading-snug">Hungry?</p>
         <p className="mt-1 text-sm text-cream/60">Fresh Indian classics, 30-min delivery.</p>
@@ -46,24 +91,60 @@ function SideRail() {
 /** Slim top bar (mobile) with slide-down menu. */
 function MobileBar() {
   const [open, setOpen] = useState(false);
+  const { user, isLoggedIn } = useAuth();
+
   return (
     <div className="lg:hidden">
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-sand/80 bg-cream/85 px-4 backdrop-blur-xl">
         <Wordmark />
         <div className="flex items-center gap-1.5">
-          <Link to="/cart" className="grid h-10 w-10 place-items-center rounded-2xl bg-ink text-cream"><ShoppingBag className="h-5 w-5" /></Link>
-          <button onClick={() => setOpen((o) => !o)} className="grid h-10 w-10 place-items-center rounded-2xl border border-sand bg-white">{open ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}</button>
+          <Link
+            to={isLoggedIn ? '/account' : '/login'}
+            className="grid h-10 w-10 place-items-center rounded-2xl border border-sand bg-white text-ink/70"
+            title={isLoggedIn ? user?.name : 'Sign In'}
+          >
+            <User className="h-5 w-5" />
+          </Link>
+          <Link to="/cart" className="grid h-10 w-10 place-items-center rounded-2xl bg-ink text-cream">
+            <ShoppingBag className="h-5 w-5" />
+          </Link>
+          <button
+            onClick={() => setOpen((o) => !o)}
+            className="grid h-10 w-10 place-items-center rounded-2xl border border-sand bg-white"
+          >
+            {open ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+          </button>
         </div>
       </header>
       {open && (
         <div className="fixed inset-0 top-16 z-40 bg-cream/98 px-4 py-6 backdrop-blur">
           <nav className="flex flex-col gap-1">
             {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.end} onClick={() => setOpen(false)}
-                className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-4 py-4 font-display text-xl ${isActive ? 'bg-ink text-cream' : 'text-ink'}`}>
+              <NavLink
+                key={n.to}
+                to={n.to}
+                end={n.end}
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-2xl px-4 py-4 font-display text-xl ${
+                    isActive ? 'bg-ink text-cream' : 'text-ink'
+                  }`
+                }
+              >
                 <n.icon className="h-5 w-5" /> {n.label}
               </NavLink>
             ))}
+            <NavLink
+              to={isLoggedIn ? '/account' : '/login'}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-2xl px-4 py-4 font-display text-xl ${
+                  isActive ? 'bg-ink text-cream' : 'text-ink'
+                }`
+              }
+            >
+              <User className="h-5 w-5" /> {isLoggedIn ? (user?.name || 'My Account') : 'Sign In / Register'}
+            </NavLink>
           </nav>
         </div>
       )}

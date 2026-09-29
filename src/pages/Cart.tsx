@@ -1,11 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Tag } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Tag, Lock, UserCheck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { rupee } from '../data/menu';
 import { FoodImage, VegBadge } from '../components/ui';
 
 export default function Cart() {
   const { lines, inc, dec, remove, subtotal, count } = useCart();
+  const { user, isLoggedIn } = useAuth();
   const nav = useNavigate();
   const delivery = subtotal >= 299 || subtotal === 0 ? 0 : 39;
   const taxes = Math.round(subtotal * 0.05);
@@ -62,7 +64,27 @@ export default function Cart() {
               <div className="my-2 border-t border-dashed border-sand" />
               <div className="flex justify-between font-display text-lg font-bold"><span>To pay</span><span>{rupee(total)}</span></div>
             </dl>
-            <button onClick={() => nav('/checkout')} className="btn-primary mt-4 w-full"><ShoppingBag className="h-5 w-5" /> Checkout · {rupee(total)}</button>
+            {isLoggedIn ? (
+              <>
+                <div className="mt-3 flex items-center gap-2 rounded-xl bg-veg/10 p-2.5 text-xs text-veg">
+                  <UserCheck className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Ordering as <strong>{user?.name || user?.phone}</strong></span>
+                </div>
+                <button onClick={() => nav('/checkout')} className="btn-primary mt-3 w-full">
+                  <ShoppingBag className="h-5 w-5" /> Proceed to Checkout · {rupee(total)}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-500/10 p-2.5 text-xs text-amber-800">
+                  <Lock className="h-4 w-4 shrink-0 text-amber-600" />
+                  <span>Sign in required before placing order</span>
+                </div>
+                <button onClick={() => nav('/login?redirect=/checkout')} className="btn-primary mt-3 w-full">
+                  <Lock className="h-5 w-5" /> Sign In to Place Order · {rupee(total)}
+                </button>
+              </>
+            )}
             {delivery > 0 && <p className="mt-2 text-center text-xs text-ink/50">Add {rupee(299 - subtotal)} more for free delivery 🚴</p>}
           </div>
         </div>
