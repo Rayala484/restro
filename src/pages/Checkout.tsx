@@ -20,7 +20,7 @@ import { rupee } from '../data/menu';
 
 export default function Checkout() {
   const { lines, subtotal, count, clear } = useCart();
-  const { user, isLoggedIn, saveAddress, login } = useAuth();
+  const { user, isLoggedIn, saveAddress, login, openAuthModal } = useAuth();
   const nav = useNavigate();
 
   const [pay, setPay] = useState('upi');
@@ -439,7 +439,7 @@ export default function Checkout() {
               <div className="space-y-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => nav('/login?redirect=/checkout')}
+                  onClick={() => openAuthModal(undefined, 'Sign In or Register to Place Order')}
                   className="btn-primary w-full"
                 >
                   <Lock className="h-4 w-4" /> Sign In to Place Order

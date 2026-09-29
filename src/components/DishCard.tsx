@@ -1,12 +1,20 @@
 import { Link } from 'react-router-dom';
-import { Plus, Clock } from 'lucide-react';
+import { Plus, Clock, Lock } from 'lucide-react';
 import { Dish, rupee } from '../data/menu';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { FoodImage, VegBadge, SpiceMeter, Stars } from './ui';
 
 export default function DishCard({ dish }: { dish: Dish }) {
   const { add } = useCart();
+  const { requireAuth, isLoggedIn } = useAuth();
   const hasOptions = !!dish.options?.length;
+
+  const handleAdd = () => {
+    requireAuth(() => {
+      add(dish);
+    }, `Sign in to order ${dish.name}`);
+  };
 
   return (
     <div className="card group overflow-hidden flex flex-col animate-rise">
@@ -36,7 +44,10 @@ export default function DishCard({ dish }: { dish: Dish }) {
           {hasOptions ? (
             <Link to={`/item/${dish.id}`} className="btn-primary btn-sm">Customise <Plus className="h-4 w-4" /></Link>
           ) : (
-            <button onClick={() => add(dish)} className="btn-primary btn-sm">Add <Plus className="h-4 w-4" /></button>
+            <button onClick={handleAdd} className="btn-primary btn-sm flex items-center gap-1">
+              {!isLoggedIn && <Lock className="h-3 w-3 opacity-80" />}
+              Add <Plus className="h-4 w-4" />
+            </button>
           )}
         </div>
       </div>

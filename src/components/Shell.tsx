@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   Home,
   UtensilsCrossed,
@@ -34,7 +34,7 @@ function Wordmark() {
 
 /** Fixed vertical navigation rail (desktop). */
 function SideRail() {
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, openAuthModal } = useAuth();
 
   // Only suggest/display Membership to customers who have already created an account
   const navItems = isLoggedIn
@@ -65,26 +65,27 @@ function SideRail() {
         ))}
 
         {/* Customer Account Nav Link */}
-        <NavLink
-          to={isLoggedIn ? '/account' : '/login'}
-          className={({ isActive }) =>
-            `group mt-2 flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-medium transition ${
-              isActive ? 'bg-ink text-cream' : 'text-ink/70 hover:bg-white hover:text-ink'
-            }`
-          }
-        >
-          {isLoggedIn ? (
-            <>
-              <User className="h-5 w-5 text-ember" />
-              <span className="truncate">{user?.name ? `Hi, ${user.name.split(' ')[0]}` : 'My Account'}</span>
-            </>
-          ) : (
-            <>
-              <Lock className="h-5 w-5 text-amber-600" />
-              <span>Sign In / Register</span>
-            </>
-          )}
-        </NavLink>
+        {isLoggedIn ? (
+          <NavLink
+            to="/account"
+            className={({ isActive }) =>
+              `group mt-2 flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-medium transition ${
+                isActive ? 'bg-ink text-cream' : 'text-ink/70 hover:bg-white hover:text-ink'
+              }`
+            }
+          >
+            <User className="h-5 w-5 text-ember" />
+            <span className="truncate">{user?.name ? `Hi, ${user.name.split(' ')[0]}` : 'My Account'}</span>
+          </NavLink>
+        ) : (
+          <button
+            onClick={() => openAuthModal(undefined, 'Sign in or Create Account')}
+            className="group mt-2 flex items-center gap-3 rounded-2xl px-3 py-3 text-left text-[15px] font-medium text-ink/70 hover:bg-white hover:text-ink transition"
+          >
+            <Lock className="h-5 w-5 text-amber-600" />
+            <span>Sign In / Register</span>
+          </button>
+        )}
       </nav>
 
       <div className="mt-6 rounded-3xl bg-ink p-5 text-cream">
@@ -99,7 +100,8 @@ function SideRail() {
 /** Slim top bar (mobile) with slide-down menu. */
 function MobileBar() {
   const [open, setOpen] = useState(false);
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, openAuthModal, requireAuth } = useAuth();
+  const nav = useNavigate();
 
   const navItems = isLoggedIn
     ? [
@@ -114,16 +116,38 @@ function MobileBar() {
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-sand/80 bg-cream/85 px-4 backdrop-blur-xl">
         <Wordmark />
         <div className="flex items-center gap-1.5">
-          <Link
-            to={isLoggedIn ? '/account' : '/login'}
-            className="grid h-10 w-10 place-items-center rounded-2xl border border-sand bg-white text-ink/70"
-            title={isLoggedIn ? user?.name : 'Sign In'}
+          {isLoggedIn ? (
+            <Link
+              to="/account"
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-sand bg-white text-ink/70"
+              title={user?.name}
+            >
+              <User className="h-5 w-5 text-ember" />
+            </Link>
+          ) : (
+            <button
+              onClick={() => openAuthModal(undefined, 'Sign In or Register')}
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-sand bg-white text-amber-700"
+              title="Sign In / Register"
+            >
+              <Lock className="h-4 w-4" />
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              if (!isLoggedIn) {
+                requireAuth(() => nav('/cart'), 'Sign in to access your cart');
+              } else {
+                nav('/cart');
+              }
+            }}
+            className="grid h-10 w-10 place-items-center rounded-2xl bg-ink text-cream"
+            aria-label="View Cart"
           >
-            <User className="h-5 w-5" />
-          </Link>
-          <Link to="/cart" className="grid h-10 w-10 place-items-center rounded-2xl bg-ink text-cream">
             <ShoppingBag className="h-5 w-5" />
-          </Link>
+          </button>
+
           <button
             onClick={() => setOpen((o) => !o)}
             className="grid h-10 w-10 place-items-center rounded-2xl border border-sand bg-white"
@@ -150,17 +174,30 @@ function MobileBar() {
                 <n.icon className="h-5 w-5" /> {n.label}
               </NavLink>
             ))}
-            <NavLink
-              to={isLoggedIn ? '/account' : '/login'}
-              onClick={() => setOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-2xl px-4 py-4 font-display text-xl ${
-                  isActive ? 'bg-ink text-cream' : 'text-ink'
-                }`
-              }
-            >
-              <User className="h-5 w-5" /> {isLoggedIn ? (user?.name || 'My Account') : 'Sign In / Register'}
-            </NavLink>
+
+            {isLoggedIn ? (
+              <NavLink
+                to="/account"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-2xl px-4 py-4 font-display text-xl ${
+                    isActive ? 'bg-ink text-cream' : 'text-ink'
+                  }`
+                }
+              >
+                <User className="h-5 w-5 text-ember" /> {user?.name || 'My Account'}
+              </NavLink>
+            ) : (
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  openAuthModal(undefined, 'Sign In or Register');
+                }}
+                className="flex items-center gap-3 rounded-2xl px-4 py-4 font-display text-xl text-ink text-left"
+              >
+                <Lock className="h-5 w-5 text-amber-600" /> Sign In / Register
+              </button>
+            )}
           </nav>
         </div>
       )}
@@ -171,13 +208,34 @@ function MobileBar() {
 /** Floating glass cart dock (all breakpoints). */
 function CartDock() {
   const { count, subtotal } = useCart();
+  const { isLoggedIn, requireAuth } = useAuth();
+  const nav = useNavigate();
+
   if (count === 0) return null;
+
+  const handleClick = () => {
+    if (!isLoggedIn) {
+      requireAuth(() => nav('/checkout'), 'Sign in to review and complete your order');
+    } else {
+      nav('/cart');
+    }
+  };
+
   return (
-    <Link to="/cart" className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-full bg-ink/95 py-2.5 pl-3 pr-5 text-cream shadow-lift backdrop-blur transition hover:scale-[1.03]">
-      <span className="grid h-9 w-9 place-items-center rounded-full bg-ember"><ShoppingBag className="h-4 w-4" /></span>
-      <span className="text-sm"><span className="font-semibold">{count} item{count > 1 ? 's' : ''}</span><span className="mx-1.5 text-cream/40">·</span><span className="font-display font-semibold">{rupee(subtotal)}</span></span>
+    <button
+      onClick={handleClick}
+      className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-full bg-ink/95 py-2.5 pl-3 pr-5 text-cream shadow-lift backdrop-blur transition hover:scale-[1.03]"
+    >
+      <span className="grid h-9 w-9 place-items-center rounded-full bg-ember">
+        <ShoppingBag className="h-4 w-4" />
+      </span>
+      <span className="text-sm">
+        <span className="font-semibold">{count} item{count > 1 ? 's' : ''}</span>
+        <span className="mx-1.5 text-cream/40">·</span>
+        <span className="font-display font-semibold">{rupee(subtotal)}</span>
+      </span>
       <span className="text-cream/50">→</span>
-    </Link>
+    </button>
   );
 }
 

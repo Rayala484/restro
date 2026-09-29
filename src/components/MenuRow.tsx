@@ -1,21 +1,25 @@
 import { Link } from 'react-router-dom';
-import { Plus, Check } from 'lucide-react';
+import { Plus, Check, Lock } from 'lucide-react';
 import { useState } from 'react';
 import { Dish, rupee } from '../data/menu';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { FoodImage, VegBadge, SpiceMeter } from './ui';
 
 /** Editorial menu-book row: thumbnail · name/desc · dotted leader · price · add. */
 export default function MenuRow({ dish }: { dish: Dish }) {
   const { add } = useCart();
+  const { requireAuth, isLoggedIn } = useAuth();
   const [added, setAdded] = useState(false);
   const hasOptions = !!dish.options?.length;
 
   const quickAdd = () => {
     if (hasOptions) return;
-    add(dish);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1200);
+    requireAuth(() => {
+      add(dish);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1200);
+    }, `Sign in to order ${dish.name}`);
   };
 
   return (
@@ -43,10 +47,24 @@ export default function MenuRow({ dish }: { dish: Dish }) {
       <div className="flex shrink-0 items-center gap-3">
         <span className="font-display text-lg font-semibold text-ink">{rupee(dish.price)}</span>
         {hasOptions ? (
-          <Link to={`/item/${dish.id}`} className="grid h-9 w-9 place-items-center rounded-full border border-ink/15 text-ink transition hover:bg-ink hover:text-cream" title="Customise"><Plus className="h-4 w-4" /></Link>
+          <Link to={`/item/${dish.id}`} className="grid h-9 w-9 place-items-center rounded-full border border-ink/15 text-ink transition hover:bg-ink hover:text-cream" title="Customise">
+            <Plus className="h-4 w-4" />
+          </Link>
         ) : (
-          <button onClick={quickAdd} className={`grid h-9 w-9 place-items-center rounded-full transition ${added ? 'bg-veg text-white' : 'bg-ink text-cream hover:bg-ember'}`} title="Add">
-            {added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          <button
+            onClick={quickAdd}
+            className={`grid h-9 w-9 place-items-center rounded-full transition ${
+              added ? 'bg-veg text-white' : 'bg-ink text-cream hover:bg-ember'
+            }`}
+            title={isLoggedIn ? 'Add to cart' : 'Sign in & add to cart'}
+          >
+            {added ? (
+              <Check className="h-4 w-4" />
+            ) : !isLoggedIn ? (
+              <Lock className="h-4 w-4 opacity-90" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
           </button>
         )}
       </div>

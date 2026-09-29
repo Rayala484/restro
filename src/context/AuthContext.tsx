@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import AuthModal from '../components/AuthModal';
 
 export type CustomerAddress = {
   fullName: string;
@@ -26,6 +27,9 @@ type AuthCtx = {
   saveAddress: (address: CustomerAddress) => void;
   activateMembership: () => void;
   logout: () => void;
+  openAuthModal: (action?: (user: CustomerUser) => void, title?: string) => void;
+  closeAuthModal: () => void;
+  requireAuth: (action: (user: CustomerUser) => void, title?: string) => void;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -42,6 +46,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   });
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState<string | undefined>();
+  const [pendingAction, setPendingAction] = useState<((u: CustomerUser) => void) | null>(null);
+
   useEffect(() => {
     try {
       if (user) {
@@ -54,20 +62,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (phone: string, name?: string): boolean => {
     const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+    let resolvedUser: CustomerUser;
+
     try {
       const db: Record<string, CustomerUser> = JSON.parse(localStorage.getItem(USERS_DB_KEY) || '{}');
       if (db[cleanPhone]) {
-        setUser(db[cleanPhone]);
-        return true;
+        resolvedUser = db[cleanPhone];
+      } else {
+        resolvedUser = {
+          name: name || `Customer ${cleanPhone.slice(-4)}`,
+          phone: cleanPhone,
+        };
       }
-    } catch {}
+    } catch {
+      resolvedUser = {
+        name: name || `Customer ${cleanPhone.slice(-4)}`,
+        phone: cleanPhone,
+      };
+    }
 
-    // Fallback: create base session if existing user or return false to prompt registration
-    const newUser: CustomerUser = {
-      name: name || `Customer ${cleanPhone.slice(-4)}`,
-      phone: cleanPhone,
-    };
-    setUser(newUser);
+    setUser(resolvedUser);
+
+    if (pendingAction) {
+      const act = pendingAction;
+      setPendingAction(null);
+      setTimeout(() => act(resolvedUser), 50);
+    }
+
     return true;
   };
 
@@ -88,6 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
 
     setUser(newUser);
+
+    if (pendingAction) {
+      const act = pendingAction;
+      setPendingAction(null);
+      setTimeout(() => act(newUser), 50);
+    }
   };
 
   const saveAddress = (address: CustomerAddress) => {
@@ -124,9 +151,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const openAuthModal = (action?: (u: CustomerUser) => void, title?: string) => {
+    if (action) setPendingAction(() => action);
+    setModalTitle(title);
+    setModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setModalOpen(false);
+    setPendingAction(null);
+  };
+
+  const requireAuth = (action: (u: CustomerUser) => void, title?: string) => {
+    if (user) {
+      action(user);
+    } else {
+      openAuthModal(action, title);
+    }
+  };
+
   return (
-    <Ctx.Provider value={{ user, isLoggedIn: Boolean(user), login, signUp, saveAddress, activateMembership, logout }}>
+    <Ctx.Provider
+      value={{
+        user,
+        isLoggedIn: Boolean(user),
+        login,
+        signUp,
+        saveAddress,
+        activateMembership,
+        logout,
+        openAuthModal,
+        closeAuthModal,
+        requireAuth,
+      }}
+    >
       {children}
+      <AuthModal
+        isOpen={modalOpen}
+        onClose={closeAuthModal}
+        title={modalTitle}
+      />
     </Ctx.Provider>
   );
 }

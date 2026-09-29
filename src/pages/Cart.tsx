@@ -7,7 +7,7 @@ import { FoodImage, VegBadge } from '../components/ui';
 
 export default function Cart() {
   const { lines, inc, dec, remove, subtotal, count } = useCart();
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, openAuthModal } = useAuth();
   const nav = useNavigate();
   const delivery = subtotal >= 299 || subtotal === 0 ? 0 : 39;
   const taxes = Math.round(subtotal * 0.05);
@@ -78,9 +78,12 @@ export default function Cart() {
               <>
                 <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-500/10 p-2.5 text-xs text-amber-800">
                   <Lock className="h-4 w-4 shrink-0 text-amber-600" />
-                  <span>Sign in required before placing order</span>
+                  <span>Account & Address verification required before order</span>
                 </div>
-                <button onClick={() => nav('/login?redirect=/checkout')} className="btn-primary mt-3 w-full">
+                <button
+                  onClick={() => openAuthModal(() => nav('/checkout'), 'Sign In or Register to Place Order')}
+                  className="btn-primary mt-3 w-full"
+                >
                   <Lock className="h-5 w-5" /> Sign In to Place Order · {rupee(total)}
                 </button>
               </>
